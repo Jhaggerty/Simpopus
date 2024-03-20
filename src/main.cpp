@@ -7,14 +7,24 @@
 
 #include "painlessMesh.h"
 
+#define NODE_TYPE_SWITCH
+// #define NODE_TYPE_LIGHT
+
 #define   MESH_PREFIX     "simpopus"
 #define   MESH_PASSWORD   "DoNotMessWithMeGirl"
 // #define   MESH_PREFIX     "whateverYouLike"
 // #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
-#define NODE_TYPE_SWITCH
-// #define NODE_TYPE_LIGHT
+#ifdef NODE_TYPE_SWITCH
+#define   SWITCH_1_PIN    D1
+#define   SWITCH_2_PIN    D2
+#endif
+
+#ifdef NODE_TYPE_LIGHT
+#define   LIGHT_1_PIN     D1
+#define   LIGHT_2_PIN     D2
+#endif
 
 Scheduler userScheduler; // to control your personal task
 painlessMesh  mesh;
@@ -22,22 +32,13 @@ painlessMesh  mesh;
 bool lightOn = false;
 
 // User stub
-void sendMessage() ; // Prototype so PlatformIO doesn't complain
 void readSwitches() ; // Prototype so PlatformIO doesn't complain
 void turnOn() ; // Prototype so PlatformIO doesn't complain
 void turnOff() ; // Prototype so PlatformIO doesn't complain
 
-Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 Task taskReadSwitches( TASK_MILLISECOND * 10 , TASK_FOREVER, &readSwitches );
 Task taskTurnOn( TASK_SECOND * 1 , TASK_FOREVER, &turnOn );
 Task taskTurnOff( TASK_SECOND * 1 , TASK_FOREVER, &turnOff );
-
-void sendMessage() {
-  String msg = "Hi from node1";
-  msg += mesh.getNodeId();
-  mesh.sendBroadcast( msg );
-  taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
-}
 
 void readSwitches() {
   if(digitalRead(D1) == LOW) {
@@ -55,7 +56,6 @@ void turnOnNode(int nodeId) {
   String msg = "Get to work!!";
   msg += mesh.getNodeId();
   mesh.sendBroadcast( msg );
-  // taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
   // taskTurnOn.disable();
 }
 
@@ -67,7 +67,6 @@ void turnOffNode(int nodeId) {
   String msg = "Take a Nap!!";
   msg += mesh.getNodeId();
   mesh.sendBroadcast( msg );
-  // taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
   // taskTurnOff.disable();
 }
 
@@ -83,8 +82,8 @@ void receivedCallback( uint32_t from, String &msg ) {
 
 void receivedCallbackEcho( uint32_t from, String &msg ) {
   Serial.printf("echoNode: Received from %u msg=%s\n", from, msg.c_str());
-  String testMsg = "Switch is Now On";
-  mesh.sendSingle(from, testMsg);
+  // String testMsg = "Switch is Now On";
+  // mesh.sendSingle(from, testMsg);
   mesh.sendSingle(from, msg);
 }
 
@@ -103,6 +102,7 @@ void nodeTimeAdjustedCallback(int32_t offset) {
 void setup() {
   Serial.begin(115200);
 
+#ifdef NODE_TYPE_SWITCH
   pinMode(D1, INPUT_PULLUP);
 
 //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
@@ -114,20 +114,26 @@ void setup() {
   mesh.onChangedConnections(&changedConnectionCallback);
   mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
-  // userScheduler.addTask( taskSendMessage );
-  // taskSendMessage.enable();
   userScheduler.addTask( taskReadSwitches);
   userScheduler.addTask( taskTurnOn );
   userScheduler.addTask( taskTurnOff );
   taskReadSwitches.enable();
+#endif
+
+#ifdef NODE_TYPE_LIGHT
+  pinMode(D1, OUTPUT);
+  digitalWrite(D1, LOW);
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, LOW);
+
+  mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
+
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, MESH_PORT );
+  mesh.onReceive(&receivedCallbackEcho);
+#endif
 }
 
 void loop() {
   // it will run the user scheduler as well
   mesh.update();
-  // if (digitalRead(D1) == HIGH) {
-  //   lightOn = true;
-  // } else {
-  //   lightOn = false;
-  // }
 }
