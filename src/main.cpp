@@ -13,6 +13,9 @@
 // #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
+#define NODE_TYPE_SWITCH
+// #define NODE_TYPE_LIGHT
+
 Scheduler userScheduler; // to control your personal task
 painlessMesh  mesh;
 
@@ -20,10 +23,14 @@ bool lightOn = false;
 
 // User stub
 void sendMessage() ; // Prototype so PlatformIO doesn't complain
+void readSwitches() ; // Prototype so PlatformIO doesn't complain
 void turnOn() ; // Prototype so PlatformIO doesn't complain
+void turnOff() ; // Prototype so PlatformIO doesn't complain
 
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
+Task taskReadSwitches( TASK_MILLISECOND * 10 , TASK_FOREVER, &readSwitches );
 Task taskTurnOn( TASK_SECOND * 1 , TASK_FOREVER, &turnOn );
+Task taskTurnOff( TASK_SECOND * 1 , TASK_FOREVER, &turnOff );
 
 void sendMessage() {
   String msg = "Hi from node1";
@@ -32,19 +39,42 @@ void sendMessage() {
   taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
 }
 
-void turnOn() {
-  String msg;// = "Get to work!!";
-  if (lightOn) {
-    msg = "Not get to work!!";
-    // lightOn = false;
-  } else {
-    msg = "Get to work!!";
+void readSwitches() {
+  if(digitalRead(D1) == LOW) {
     // lightOn = true;
+    taskTurnOn.enableIfNot();
+    taskTurnOff.disable();
+  } else {
+    // lightOn = false;
+    taskTurnOff.enableIfNot();
+    taskTurnOn.disable();
   }
+}
+
+void turnOnNode(int nodeId) {
+  String msg = "Get to work!!";
   msg += mesh.getNodeId();
   mesh.sendBroadcast( msg );
   // taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
+  // taskTurnOn.disable();
 }
+
+void turnOn() {
+  turnOnNode(1);
+}
+
+void turnOffNode(int nodeId) {
+  String msg = "Take a Nap!!";
+  msg += mesh.getNodeId();
+  mesh.sendBroadcast( msg );
+  // taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
+  // taskTurnOff.disable();
+}
+
+void turnOff() {
+  turnOffNode(1);
+}
+
 
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg ) {
@@ -73,6 +103,8 @@ void nodeTimeAdjustedCallback(int32_t offset) {
 void setup() {
   Serial.begin(115200);
 
+  pinMode(D1, INPUT_PULLUP);
+
 //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
   mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
 
@@ -84,16 +116,18 @@ void setup() {
 
   // userScheduler.addTask( taskSendMessage );
   // taskSendMessage.enable();
+  userScheduler.addTask( taskReadSwitches);
   userScheduler.addTask( taskTurnOn );
-  taskTurnOn.enable();
+  userScheduler.addTask( taskTurnOff );
+  taskReadSwitches.enable();
 }
 
 void loop() {
   // it will run the user scheduler as well
   mesh.update();
-  if (digitalRead(D1) == HIGH) {
-    lightOn = true;
-  } else {
-    lightOn = false;
-  }
+  // if (digitalRead(D1) == HIGH) {
+  //   lightOn = true;
+  // } else {
+  //   lightOn = false;
+  // }
 }
