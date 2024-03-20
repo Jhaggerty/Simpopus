@@ -7,8 +7,8 @@
 
 #include "painlessMesh.h"
 
-// #define NODE_TYPE_SWITCH
-#define NODE_TYPE_LIGHT
+#define NODE_TYPE_SWITCH
+// #define NODE_TYPE_LIGHT
 
 #define   MESH_PREFIX     "simpopus"
 #define   MESH_PASSWORD   "DoNotMessWithMeGirl"
@@ -19,14 +19,20 @@
 #define ON_MESSAGE "Get to work!!"
 #define OFF_MESSAGE "Take a Nap!!"
 
+#define NODE_ID_1 1
+#define NODE_ID_2 2
+#define NODE_ID_3 3
+
 #ifdef NODE_TYPE_SWITCH
-#define   SWITCH_1_PIN    D1
+#define   SWITCH_1_PIN    D3
 #define   SWITCH_2_PIN    D2
+#define   SWITCH_3_PIN    D1
 #endif
 
 #ifdef NODE_TYPE_LIGHT
 #define   LIGHT_1_PIN     D1
 #define   LIGHT_2_PIN     D2
+#define   LIGHT_3_PIN     D3
 #endif
 
 Scheduler userScheduler; // to control your personal task
@@ -36,26 +42,56 @@ painlessMesh  mesh;
 // User stub
 void readSwitches() ; // Prototype so PlatformIO doesn't complain
 void turnOn() ; // Prototype so PlatformIO doesn't complain
+void turnOnNode1() ; // Prototype so PlatformIO doesn't complain
+void turnOnNode2() ; // Prototype so PlatformIO doesn't complain
+void turnOnNode3() ; // Prototype so PlatformIO doesn't complain
 void turnOff() ; // Prototype so PlatformIO doesn't complain
+void turnOffNode1() ; // Prototype so PlatformIO doesn't complain
+void turnOffNode2() ; // Prototype so PlatformIO doesn't complain
+void turnOffNode3() ; // Prototype so PlatformIO doesn't complain
 
 Task taskReadSwitches( TASK_MILLISECOND * 10 , TASK_FOREVER, &readSwitches );
 Task taskTurnOn( TASK_SECOND * 1 , TASK_FOREVER, &turnOn );
+Task taskTurnOnNode1( TASK_SECOND * 1 , TASK_FOREVER, &turnOnNode1 );
+Task taskTurnOnNode2( TASK_SECOND * 1 , TASK_FOREVER, &turnOnNode2 );
+Task taskTurnOnNode3( TASK_SECOND * 1 , TASK_FOREVER, &turnOnNode3 );
 Task taskTurnOff( TASK_SECOND * 1 , TASK_FOREVER, &turnOff );
+Task taskTurnOffNode1( TASK_SECOND * 1 , TASK_FOREVER, &turnOffNode1 );
+Task taskTurnOffNode2( TASK_SECOND * 1 , TASK_FOREVER, &turnOffNode2 );
+Task taskTurnOffNode3( TASK_SECOND * 1 , TASK_FOREVER, &turnOffNode3 );
 
 void readSwitches() {
   if(digitalRead(SWITCH_1_PIN) == LOW) {
     // lightOn = true;
-    taskTurnOn.enableIfNot();
-    taskTurnOff.disable();
+    taskTurnOnNode1.enableIfNot();
+    taskTurnOffNode1.disable();
   } else {
     // lightOn = false;
-    taskTurnOff.enableIfNot();
-    taskTurnOn.disable();
+    taskTurnOffNode1.enableIfNot();
+    taskTurnOnNode1.disable();
+  }
+  if(digitalRead(SWITCH_2_PIN) == LOW) {
+    // lightOn = true;
+    taskTurnOnNode2.enableIfNot();
+    taskTurnOffNode2.disable();
+  } else {
+    // lightOn = false;
+    taskTurnOffNode2.enableIfNot();
+    taskTurnOnNode2.disable();
+  }
+  if(digitalRead(SWITCH_3_PIN) == LOW) {
+    // lightOn = true;
+    taskTurnOnNode3.enableIfNot();
+    taskTurnOffNode3.disable();
+  } else {
+    // lightOn = false;
+    taskTurnOffNode3.enableIfNot();
+    taskTurnOnNode3.disable();
   }
 }
 
 void turnOnNode(int nodeId) {
-  String msg = ON_MESSAGE;
+  String msg = String(nodeId) + " " ON_MESSAGE;
   msg += mesh.getNodeId();
   mesh.sendBroadcast( msg );
   // taskTurnOn.disable();
@@ -65,8 +101,20 @@ void turnOn() {
   turnOnNode(1);
 }
 
+void turnOnNode1() {
+  turnOnNode(NODE_ID_1);
+}
+
+void turnOnNode2() {
+  turnOnNode(NODE_ID_2);
+}
+
+void turnOnNode3() {
+  turnOnNode(NODE_ID_3);
+}
+
 void turnOffNode(int nodeId) {
-  String msg = OFF_MESSAGE;
+  String msg = String(nodeId) + " " OFF_MESSAGE;
   msg += mesh.getNodeId();
   mesh.sendBroadcast( msg );
   // taskTurnOff.disable();
@@ -74,6 +122,18 @@ void turnOffNode(int nodeId) {
 
 void turnOff() {
   turnOffNode(1);
+}
+
+void turnOffNode1() {
+  turnOffNode(NODE_ID_1);
+}
+
+void turnOffNode2() {
+  turnOffNode(NODE_ID_2);
+}
+
+void turnOffNode3() {
+  turnOffNode(NODE_ID_3);
 }
 
 
@@ -106,13 +166,29 @@ void receivedCallbackEcho( uint32_t from, String &msg ) {
 void receivedCallbackHandleLight( uint32_t from, String &msg ) {
   Serial.printf("echoNode: Received from %u msg=%s\n", from, msg.c_str());
   if (msg.indexOf(ON_MESSAGE) >= 0) {
-    digitalWrite(LIGHT_1_PIN, HIGH);
+    if (msg.charAt(0) == '1') {
+      digitalWrite(LIGHT_1_PIN, HIGH);
+    } else if (msg.charAt(0) == '2') {
+      digitalWrite(LIGHT_2_PIN, HIGH);
+    } else if (msg.charAt(0) == '3') {
+      digitalWrite(LIGHT_3_PIN, HIGH);
+    }
+    // digitalWrite(LIGHT_1_PIN, HIGH);
     // digitalWrite(LIGHT_2_PIN, HIGH);
-    Serial.println("Switch is Now On");
+    // digitalWrite(LIGHT_3_PIN, HIGH);
+    // Serial.println("Switch is Now On");
   } else if (msg.indexOf(OFF_MESSAGE) >= 0) {
-    digitalWrite(LIGHT_1_PIN, LOW);
+    if(msg.charAt(0) == '1') {
+      digitalWrite(LIGHT_1_PIN, LOW);
+    } else if (msg.charAt(0) == '2') {
+      digitalWrite(LIGHT_2_PIN, LOW);
+    } else if (msg.charAt(0) == '3') {
+      digitalWrite(LIGHT_3_PIN, LOW);
+    }
+    // digitalWrite(LIGHT_1_PIN, LOW);
     // digitalWrite(LIGHT_2_PIN, LOW);
-    Serial.println("Switch is Now Off");
+    // digitalWrite(LIGHT_3_PIN, LOW);
+    // Serial.println("Switch is Now Off");
   } else {
     Serial.println("Unknown message");
   }
@@ -127,6 +203,8 @@ void setup() {
 
 #ifdef NODE_TYPE_SWITCH
   pinMode(SWITCH_1_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_2_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_3_PIN, INPUT_PULLUP);
 
 //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
   mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
@@ -138,29 +216,41 @@ void setup() {
   mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
   userScheduler.addTask( taskReadSwitches);
-  userScheduler.addTask( taskTurnOn );
-  userScheduler.addTask( taskTurnOff );
+  // userScheduler.addTask( taskTurnOn );
+  userScheduler.addTask( taskTurnOnNode1 );
+  userScheduler.addTask( taskTurnOnNode2 );
+  userScheduler.addTask( taskTurnOnNode3 );
+  // userScheduler.addTask( taskTurnOff );
+  userScheduler.addTask( taskTurnOffNode1 );
+  userScheduler.addTask( taskTurnOffNode2 );
+  userScheduler.addTask( taskTurnOffNode3 );
   taskReadSwitches.enable();
 #endif
 
 #ifdef NODE_TYPE_LIGHT
   pinMode(LIGHT_1_PIN, OUTPUT);
   digitalWrite(LIGHT_1_PIN, LOW);
-  // pinMode(LIGHT_2_PIN, OUTPUT);
-  // digitalWrite(LIGHT_2_PIN, LOW);
+  pinMode(LIGHT_2_PIN, OUTPUT);
+  digitalWrite(LIGHT_2_PIN, LOW);
+  pinMode(LIGHT_3_PIN, OUTPUT);
+  digitalWrite(LIGHT_3_PIN, LOW);
 
-  delay(500);
-  digitalWrite(LIGHT_1_PIN, HIGH);
+  // delay(500);
+  // digitalWrite(LIGHT_1_PIN, HIGH);
   // digitalWrite(LIGHT_2_PIN, HIGH);
-  delay(500);
-  digitalWrite(LIGHT_1_PIN, LOW);
+  // digitalWrite(LIGHT_3_PIN, HIGH);
+  // delay(500);
+  // digitalWrite(LIGHT_1_PIN, LOW);
   // digitalWrite(LIGHT_2_PIN, LOW);
-  delay(500);
-  digitalWrite(LIGHT_1_PIN, HIGH);
+  // digitalWrite(LIGHT_3_PIN, LOW);
+  // delay(500);
+  // digitalWrite(LIGHT_1_PIN, HIGH);
   // digitalWrite(LIGHT_2_PIN, HIGH);
-  delay(500);
-  digitalWrite(LIGHT_1_PIN, LOW);
+  // digitalWrite(LIGHT_3_PIN, HIGH);
+  // delay(500);
+  // digitalWrite(LIGHT_1_PIN, LOW);
   // digitalWrite(LIGHT_2_PIN, LOW);
+  // digitalWrite(LIGHT_3_PIN, LOW);
 
 
   mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
