@@ -32,9 +32,13 @@
 #define NODE_2_ID_3 NODE_2_ID "_3"
 
 #ifdef NODE_TYPE_SWITCH
-#define SWITCH_1_PIN D3
-#define SWITCH_2_PIN D2
-#define SWITCH_3_PIN D1
+#define SWITCH_1_PIN D6
+#define SWITCH_2_PIN D5
+#define SWITCH_3_PIN D4
+#define SWITCH_4_PIN D3
+#define SWITCH_5_PIN D2
+#define SWITCH_6_PIN D1
+
 #endif
 
 #ifdef NODE_TYPE_LIGHT
@@ -49,54 +53,62 @@ painlessMesh mesh;
 #ifdef NODE_TYPE_SWITCH
 // User stub - Prototypes so PlatformIO doesn't complain
 void readSwitches();
-void turnOnNode1();
-void turnOnNode2();
-void turnOnNode3();
-void turnOffNode1();
-void turnOffNode2();
-void turnOffNode3();
+void turnOnNode1Lamp1();
+void turnOffNode1Lamp1();
+void turnOnNode1Lamp2();
+void turnOffNode1Lamp2();
+void turnOnNode1Lamp3();
+void turnOffNode1Lamp3();
 void turnOnNode2Lamp1();
 void turnOffNode2Lamp1();
+void turnOnNode2Lamp2();
+void turnOffNode2Lamp2();
+void turnOnNode2Lamp3();
+void turnOffNode2Lamp3();
 
 Task taskReadSwitches(TASK_MILLISECOND * 10, TASK_FOREVER, &readSwitches);
-Task taskTurnOnNode1(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode1);
-Task taskTurnOffNode1(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode1);
-Task taskTurnOnNode2(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode2);
-Task taskTurnOffNode2(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode2);
-Task taskTurnOnNode3(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode3);
-Task taskTurnOffNode3(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode3);
+Task taskTurnOnNode1Lamp1(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode1Lamp1);
+Task taskTurnOffNode1Lamp1(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode1Lamp1);
+Task taskTurnOnNode1Lamp2(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode1Lamp2);
+Task taskTurnOffNode1Lamp2(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode1Lamp2);
+Task taskTurnOnNode1Lamp3(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode1Lamp3);
+Task taskTurnOffNode1Lamp3(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode1Lamp3);
 Task taskturnOnNode2Lamp1(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode2Lamp1);
 Task taskturnOffNode2Lamp1(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode2Lamp1);
+Task taskturnOnNode2Lamp2(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode2Lamp2);
+Task taskturnOffNode2Lamp2(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode2Lamp2);
+Task taskturnOnNode2Lamp3(TASK_SECOND * 1, TASK_FOREVER, &turnOnNode2Lamp3);
+Task taskturnOffNode2Lamp3(TASK_SECOND * 1, TASK_FOREVER, &turnOffNode2Lamp3);
 
 void readSwitches() {
     if (digitalRead(SWITCH_1_PIN) == LOW) {
         // lightOn = true;
-        taskTurnOnNode1.enableIfNot();
-        taskTurnOffNode1.disable();
+        taskTurnOnNode1Lamp1.enableIfNot();
+        taskTurnOffNode1Lamp1.disable();
     } else {
         // lightOn = false;
-        taskTurnOffNode1.enableIfNot();
-        taskTurnOnNode1.disable();
+        taskTurnOffNode1Lamp1.enableIfNot();
+        taskTurnOnNode1Lamp1.disable();
     }
     if (digitalRead(SWITCH_2_PIN) == LOW) {
         // lightOn = true;
-        taskTurnOnNode2.enableIfNot();
-        taskTurnOffNode2.disable();
+        taskTurnOnNode1Lamp2.enableIfNot();
+        taskTurnOffNode1Lamp2.disable();
     } else {
         // lightOn = false;
-        taskTurnOffNode2.enableIfNot();
-        taskTurnOnNode2.disable();
+        taskTurnOffNode1Lamp2.enableIfNot();
+        taskTurnOnNode1Lamp2.disable();
     }
-    // if (digitalRead(SWITCH_3_PIN) == LOW) {
-    //     // lightOn = true;
-    //     taskTurnOnNode3.enableIfNot();
-    //     taskTurnOffNode3.disable();
-    // } else {
-    //     // lightOn = false;
-    //     taskTurnOffNode3.enableIfNot();
-    //     taskTurnOnNode3.disable();
-    // }
     if (digitalRead(SWITCH_3_PIN) == LOW) {
+        // lightOn = true;
+        taskTurnOnNode1Lamp3.enableIfNot();
+        taskTurnOffNode1Lamp3.disable();
+    } else {
+        // lightOn = false;
+        taskTurnOffNode1Lamp3.enableIfNot();
+        taskTurnOnNode1Lamp3.disable();
+    }
+    if (digitalRead(SWITCH_4_PIN) == LOW) {
         // lightOn = true;
         taskturnOnNode2Lamp1.enableIfNot();
         taskturnOffNode2Lamp1.disable();
@@ -104,6 +116,24 @@ void readSwitches() {
         // lightOn = false;
         taskturnOffNode2Lamp1.enableIfNot();
         taskturnOnNode2Lamp1.disable();
+    }
+    if (digitalRead(SWITCH_5_PIN) == LOW) {
+        // lightOn = true;
+        taskturnOnNode2Lamp2.enableIfNot();
+        taskturnOffNode2Lamp2.disable();
+    } else {
+        // lightOn = false;
+        taskturnOffNode2Lamp2.enableIfNot();
+        taskturnOnNode2Lamp2.disable();
+    }
+    if (digitalRead(SWITCH_6_PIN) == LOW) {
+        // lightOn = true;
+        taskturnOnNode2Lamp3.enableIfNot();
+        taskturnOffNode2Lamp3.disable();
+    } else {
+        // lightOn = false;
+        taskturnOffNode2Lamp3.enableIfNot();
+        taskturnOnNode2Lamp3.disable();
     }
 }
 
@@ -119,27 +149,27 @@ void turnOffNode(String nodeId) {
     mesh.sendBroadcast(msg);
 }
 
-void turnOnNode1() {
+void turnOnNode1Lamp1() {
     turnOnNode(NODE_1_ID_1);
 }
 
-void turnOffNode1() {
+void turnOffNode1Lamp1() {
     turnOffNode(NODE_1_ID_1);
 }
 
-void turnOnNode2() {
+void turnOnNode1Lamp2() {
     turnOnNode(NODE_1_ID_2);
 }
 
-void turnOffNode2() {
+void turnOffNode1Lamp2() {
     turnOffNode(NODE_1_ID_2);
 }
 
-void turnOnNode3() {
+void turnOnNode1Lamp3() {
     turnOnNode(NODE_1_ID_3);
 }
 
-void turnOffNode3() {
+void turnOffNode1Lamp3() {
     turnOffNode(NODE_1_ID_3);
 }
 
@@ -149,6 +179,22 @@ void turnOnNode2Lamp1() {
 
 void turnOffNode2Lamp1() {
     turnOffNode(NODE_2_ID_1);
+}
+
+void turnOnNode2Lamp2() {
+    turnOnNode(NODE_2_ID_2);
+}
+
+void turnOffNode2Lamp2() {
+    turnOffNode(NODE_2_ID_2);
+}
+
+void turnOnNode2Lamp3() {
+    turnOnNode(NODE_2_ID_3);
+}
+
+void turnOffNode2Lamp3() {
+    turnOffNode(NODE_2_ID_3);
 }
 
 // Needed for painless library
@@ -217,6 +263,9 @@ void setup() {
     pinMode(SWITCH_1_PIN, INPUT_PULLUP);
     pinMode(SWITCH_2_PIN, INPUT_PULLUP);
     pinMode(SWITCH_3_PIN, INPUT_PULLUP);
+    pinMode(SWITCH_4_PIN, INPUT_PULLUP);
+    pinMode(SWITCH_5_PIN, INPUT_PULLUP);
+    pinMode(SWITCH_6_PIN, INPUT_PULLUP);
 
     // mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
     mesh.setDebugMsgTypes(ERROR | STARTUP);  // set before init() so that you can see startup messages
@@ -228,14 +277,19 @@ void setup() {
     mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
     userScheduler.addTask(taskReadSwitches);
-    userScheduler.addTask(taskTurnOnNode1);
-    userScheduler.addTask(taskTurnOffNode1);
-    userScheduler.addTask(taskTurnOnNode2);
-    userScheduler.addTask(taskTurnOffNode2);
-    userScheduler.addTask(taskTurnOnNode3);
-    userScheduler.addTask(taskTurnOffNode3);
+    userScheduler.addTask(taskTurnOnNode1Lamp1);
+    userScheduler.addTask(taskTurnOffNode1Lamp1);
+    userScheduler.addTask(taskTurnOnNode1Lamp2);
+    userScheduler.addTask(taskTurnOffNode1Lamp2);
+    userScheduler.addTask(taskTurnOnNode1Lamp3);
+    userScheduler.addTask(taskTurnOffNode1Lamp3);
     userScheduler.addTask(taskturnOnNode2Lamp1);
     userScheduler.addTask(taskturnOffNode2Lamp1);
+    userScheduler.addTask(taskturnOnNode2Lamp2);
+    userScheduler.addTask(taskturnOffNode2Lamp2);
+    userScheduler.addTask(taskturnOnNode2Lamp3);
+    userScheduler.addTask(taskturnOffNode2Lamp3);
+
     taskReadSwitches.enable();
 #endif
 
